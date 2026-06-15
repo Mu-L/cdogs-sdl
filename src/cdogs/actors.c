@@ -2347,14 +2347,38 @@ void ActorHit(const NThingDamage d)
 		a->grimaceCounter = GRIMACE_HIT_TICKS;
 
 		// Lose hat when taking damage, but only sometimes
-		if (!a->isHatDetached && damage > 0 &&
-			a->health < ActorGetCharacter(a)->maxHealth / 2 &&
-			RAND_INT(0, 3) == 0 &&
-			DetachableHatIsDetachable(
-				ActorGetCharacter(a)->HeadParts[HEAD_PART_HAT]))
+		// From non-melee/explosive weapons,
+		// and if health is below half but actor still alive
+		const WeaponClass *sourceWC = StrWeaponClass(d.SourceWeaponClassName);
+		const Character *c = ActorGetCharacter(a);
+		const char *hat = c->HeadParts[HEAD_PART_HAT];
+		if (sourceWC && sourceWC->Type == GUNTYPE_NORMAL &&
+			!a->isHatDetached && damage > 0 && a->health < c->maxHealth / 2 &&
+			a->health > 0 && RAND_INT(0, 3) == 0 && hat && strlen(hat) > 0)
 		{
-			// TODO: create hat particle, and sound effect
-			a->isHatDetached = true;
+			char buf[256];
+			sprintf(buf, "hat/%s", c->HeadParts[HEAD_PART_HAT]);
+			const ParticleClass *hatParticle =
+				StrParticleClass(&gParticleClasses, buf);
+			if (hatParticle)
+			{
+				GameEvent e = GameEventNew(GAME_EVENT_ADD_PARTICLE);
+				e.u.AddParticle.Class = hatParticle;
+				e.u.AddParticle.Pos = a->thing.Pos;
+				e.u.AddParticle.Z = 16 * Z_FACTOR;
+				e.u.AddParticle.DZ = 4;
+				e.u.AddParticle.Vel = svec2_scale(svec2_normalize(NetToVec2(d.Vel)), 1.0f);
+				// TODO: figure out how to do char masking for hat
+				e.u.AddParticle.Mask = c->Colors.Hat;
+				GameEventsEnqueue(&gGameEvents, e);
+
+				GameEvent es = GameEventNew(GAME_EVENT_SOUND_AT);
+				strcpy(es.u.SoundAt.Sound, "headshot");
+				es.u.SoundAt.Pos = Vec2ToNet(a->Pos);
+				GameEventsEnqueue(&gGameEvents, es);
+
+				a->isHatDetached = true;
+			}
 		}
 	}
 }

@@ -79,7 +79,3 @@ void CharacterClassesInitialize(CharacterClasses *c, const char *filename);
 void CharacterClassesLoadJSON(CArray *classes, json_t *root);
 void CharacterClassesClear(CArray *classes);
 void CharacterClassesTerminate(CharacterClasses *c);
-
-void DetachableHatsInitialize(void);
-void DetachableHatsTerminate(void);
-bool DetachableHatIsDetachable(const char *hatName);

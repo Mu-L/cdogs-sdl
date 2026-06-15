@@ -35,7 +35,6 @@
 #define FOOTSTEP_DISTANCE_PLUS 250
 
 CharacterClasses gCharacterClasses;
-map_t gDetachableHats;
 
 // TODO: use map structure?
 const CharacterClass *StrCharacterClass(const char *s)
@@ -473,46 +472,4 @@ void CharacterClassesTerminate(CharacterClasses *c)
 	CArrayTerminate(&c->Classes);
 	CharacterClassesClear(&c->CustomClasses);
 	CArrayTerminate(&c->CustomClasses);
-}
-
-void DetachableHatsInitialize(void)
-{
-	gDetachableHats = hashmap_new();
-	// Load detachable hat names from file
-	char buf[CDOGS_PATH_MAX];
-	GetDataFilePath(buf, "data/detachable_hats.txt");
-	FILE *f = fopen(buf, "r");
-	if (f == NULL)
-	{
-		LOG(LM_MAIN, LL_ERROR, "Cannot open detachable hats file: %s", buf);
-		goto bail;
-	}
-	char line[256];
-	while (fgets(line, sizeof(line), f))
-	{
-		if (strlen(line) > 0 && linex[strlen(line) - 1] == '\n')
-		{
-			line[strlen(line) - 1] = '\0';
-		}
-		char *hatName;
-		CSTRDUP(hatName, line);
-		if (hashmap_put(gDetachableHats, hatName, NULL) != MAP_OK)
-		{
-			LOG(LM_MAIN, LL_ERROR, "failed to load detachable hats (%s)", buf);
-			CFREE(hatName);
-			continue;
-		}
-	}
-bail:
-	fclose(f);
-}
-
-void DetachableHatsTerminate(void)
-{
-	hashmap_free(gDetachableHats);
-}
-
-bool DetachableHatIsDetachable(const char *hatName)
-{
-	return hatName && hashmap_get(gDetachableHats, hatName, NULL) != MAP_MISSING;
 }

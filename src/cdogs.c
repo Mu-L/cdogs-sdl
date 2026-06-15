@@ -235,7 +235,6 @@ int main(int argc, char *argv[])
 	LoadingScreenDraw(&gLoadingScreen, "Loading character classes...", 0.66f);
 	CharacterClassesInitialize(
 		&gCharacterClasses, "data/character_classes.json");
-	DetachableHatsInitialize();
 #ifndef __EMSCRIPTEN__
 	LoadingScreenDraw(&gLoadingScreen, "Loading player templates...", 0.75f);
 	PlayerTemplatesLoad(&gPlayerTemplates, &gCharacterClasses);
@@ -312,7 +311,6 @@ bail:
 	MissionOptionsTerminate(&gMission);
 	MapTerminate(&gMap);
 	NetClientTerminate(&gNetClient);
-	DetachableHatsTerminate();
 	atexit(enet_deinitialize);
 	EventTerminate(&gEventHandlers);
 	CampaignTerminate(&gCampaign);

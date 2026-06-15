@@ -1,9 +1,0 @@
-beret
-capotain
-combat_helmet
-leprechaun
-party
-peak_cap
-santa
-sombrero
-witch
