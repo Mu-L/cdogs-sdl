@@ -52,7 +52,7 @@
 
 #include "proto/msg.pb.h"
 
-#include "particle.h"
+#include "particle_class.h"
 #include "sounds.h"
 #include "tile.h"
 

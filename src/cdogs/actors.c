@@ -2366,10 +2366,11 @@ void ActorHit(const NThingDamage d)
 				e.u.AddParticle.Class = hatParticle;
 				e.u.AddParticle.Pos = a->thing.Pos;
 				e.u.AddParticle.Z = 16 * Z_FACTOR;
-				e.u.AddParticle.DZ = 4;
-				e.u.AddParticle.Vel = svec2_scale(svec2_normalize(NetToVec2(d.Vel)), 1.0f);
-				// TODO: figure out how to do char masking for hat
-				e.u.AddParticle.Mask = c->Colors.Hat;
+				e.u.AddParticle.DZ = 12;
+				e.u.AddParticle.Vel =
+					svec2_scale(svec2_normalize(NetToVec2(d.Vel)), 0.4f);
+				e.u.AddParticle.Spin = RAND_DOUBLE(-0.5, 0.5);
+				e.u.AddParticle.ActorUID = a->uid;
 				GameEventsEnqueue(&gGameEvents, e);
 
 				GameEvent es = GameEventNew(GAME_EVENT_SOUND_AT);

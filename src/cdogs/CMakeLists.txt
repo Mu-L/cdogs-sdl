@@ -90,6 +90,7 @@ set(CDOGS_SOURCES
 	objs.c
 	palette.c
 	particle.c
+	particle_class.c
 	path_cache.c
 	pic.c
 	pic_manager.c
@@ -203,6 +204,7 @@ set(CDOGS_HEADERS
 	objs.h
 	palette.h
 	particle.h
+	particle_class.h
 	path_cache.h
 	pic.h
 	pic_manager.h

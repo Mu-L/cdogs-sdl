@@ -463,33 +463,23 @@
     },
     {
       "Name": "hat/beret",
-      "Pic": {
-        "Type": "Animated",
-        "Sprites": "chars/hats/beret",
-        "TicksPerFrame": 5
-      },
+      "Type": "CharSprite",
+      "CharSprite": "chars/hats/beret",
       "RangeLow": 10000,
       "RangeHigh": 11000,
-      "DrawBelow": true,
       "GravityFactor": 1,
       "HitsWalls": true,
-      "BounceFriction": 0.4,
-      "ZDarken": true
+      "BounceFriction": 0.4
     },
     {
       "Name": "hat/combat_helmet",
-      "Pic": {
-        "Type": "Animated",
-        "Sprites": "chars/hats/combat_helmet",
-        "TicksPerFrame": 5
-      },
+      "Type": "CharSprite",
+      "CharSprite": "chars/hats/combat_helmet",
       "RangeLow": 10000,
       "RangeHigh": 11000,
-      "DrawBelow": true,
       "GravityFactor": 1,
       "HitsWalls": true,
-      "BounceFriction": 0.4,
-      "ZDarken": true
+      "BounceFriction": 0.4
     }
   ]
 }

@@ -27,231 +27,18 @@
 */
 #include "particle.h"
 
-#include "campaigns.h"
+#include "actors.h"
 #include "collision/collision.h"
 #include "font.h"
 #include "game_events.h"
-#include "json_utils.h"
-#include "log.h"
+#include "gamedata.h"
 #include "objs.h"
 
-ParticleClasses gParticleClasses;
 CArray gParticles;
 #define MAX_PARTICLES 4096
 
-#define VERSION 3
-
 // Particles get darker when below this height
 #define PARTICLE_DARKEN_Z BULLET_Z
-
-ParticleType StrParticleType(const char *s)
-{
-	S2T(PARTICLE_PIC, "Pic");
-	S2T(PARTICLE_TEXT, "Text");
-	return PARTICLE_PIC;
-}
-
-static void LoadParticleClass(
-	ParticleClass *c, json_t *node, const int version);
-void ParticleClassesInit(ParticleClasses *classes, const char *filename)
-{
-	CArrayInit(&classes->Classes, sizeof(ParticleClass));
-	CArrayInit(&classes->CustomClasses, sizeof(ParticleClass));
-
-	char buf[CDOGS_PATH_MAX];
-	GetDataFilePath(buf, filename);
-	FILE *f = fopen(buf, "r");
-	json_t *root = NULL;
-	if (f == NULL)
-	{
-		LOG(LM_MAIN, LL_ERROR, "Error: cannot load particles file %s", buf);
-		goto bail;
-	}
-	enum json_error e = json_stream_parse(f, &root);
-	if (e != JSON_OK)
-	{
-		LOG(LM_MAIN, LL_ERROR, "Error parsing particles file %s", buf);
-		goto bail;
-	}
-	ParticleClassesLoadJSON(&classes->Classes, root);
-
-bail:
-	if (f != NULL)
-	{
-		fclose(f);
-	}
-	json_free_value(&root);
-}
-void ParticleClassesLoadJSON(CArray *classes, json_t *root)
-{
-	int version;
-	LoadInt(&version, root, "Version");
-	if (version > VERSION || version <= 0)
-	{
-		CASSERT(false, "cannot read particles file version");
-		return;
-	}
-
-	json_t *particlesNode = json_find_first_label(root, "Particles")->child;
-	for (json_t *child = particlesNode->child; child; child = child->next)
-	{
-		ParticleClass c;
-		LoadParticleClass(&c, child, version);
-		CArrayPushBack(classes, &c);
-	}
-}
-void ParticleClassesTerminate(ParticleClasses *classes)
-{
-	ParticleClassesClear(&classes->Classes);
-	CArrayTerminate(&classes->Classes);
-	ParticleClassesClear(&classes->CustomClasses);
-	CArrayTerminate(&classes->CustomClasses);
-}
-void ParticleClassesClear(CArray *classes)
-{
-	for (int i = 0; i < (int)classes->size; i++)
-	{
-		ParticleClass *c = CArrayGet(classes, i);
-		CFREE(c->Name);
-	}
-	CArrayClear(classes);
-}
-static void LoadParticleClass(
-	ParticleClass *c, json_t *node, const int version)
-{
-	memset(c, 0, sizeof *c);
-	char *tmp;
-
-	c->Name = GetString(node, "Name");
-
-	c->Type = PARTICLE_PIC;
-	if (version < 2)
-	{
-		c->u.Pic.Mask = colorWhite;
-		if (json_find_first_label(node, "Sprites"))
-		{
-			tmp = GetString(node, "Sprites");
-			c->u.Pic.Type = PICTYPE_DIRECTIONAL;
-			c->u.Pic.u.Sprites =
-				&PicManagerGetSprites(&gPicManager, tmp)->pics;
-			CFREE(tmp);
-		}
-		else
-		{
-			LoadPic(&c->u.Pic.u.Pic, node, "Pic");
-		}
-		if (json_find_first_label(node, "Mask"))
-		{
-			tmp = GetString(node, "Mask");
-			c->u.Pic.Mask = StrColor(tmp);
-			CFREE(tmp);
-		}
-		int ticksPerFrame = 0;
-		LoadInt(&ticksPerFrame, node, "TicksPerFrame");
-		if (ticksPerFrame > 0)
-		{
-			c->u.Pic.Type = PICTYPE_ANIMATED;
-			c->u.Pic.u.Animated.Sprites = c->u.Pic.u.Sprites;
-			c->u.Pic.u.Animated.TicksPerFrame = ticksPerFrame;
-		}
-	}
-	else
-	{
-		tmp = NULL;
-		LoadStr(&tmp, node, "Type");
-		if (tmp != NULL)
-		{
-			c->Type = StrParticleType(tmp);
-			CFREE(tmp);
-		}
-		switch (c->Type)
-		{
-		case PARTICLE_PIC:
-			CPicLoadJSON(&c->u.Pic, json_find_first_label(node, "Pic")->child);
-			break;
-		case PARTICLE_TEXT:
-			c->u.Text.Mask = colorWhite;
-			if (version <= 2)
-			{
-				tmp = NULL;
-				LoadStr(&tmp, node, "TextMask");
-				if (tmp != NULL)
-				{
-					c->u.Text.Mask = StrColor(tmp);
-				}
-				CFREE(tmp);
-			}
-			else
-			{
-				if (json_find_first_label(node, "Text"))
-				{
-					json_t *text = json_find_first_label(node, "Text")->child;
-					tmp = NULL;
-					LoadStr(&tmp, text, "Mask");
-					if (tmp != NULL)
-					{
-						c->u.Text.Mask = StrColor(tmp);
-					}
-					CFREE(tmp);
-
-					LoadStr(&c->u.Text.Value, text, "Value");
-				}
-			}
-			break;
-		default:
-			break;
-		}
-	}
-
-	if (json_find_first_label(node, "Range"))
-	{
-		LoadInt(&c->RangeLow, node, "Range");
-		c->RangeHigh = c->RangeLow;
-	}
-	if (json_find_first_label(node, "RangeLow"))
-	{
-		LoadInt(&c->RangeLow, node, "RangeLow");
-	}
-	if (json_find_first_label(node, "RangeHigh"))
-	{
-		LoadInt(&c->RangeHigh, node, "RangeHigh");
-	}
-	c->RangeLow = MIN(c->RangeLow, c->RangeHigh);
-	c->RangeHigh = MAX(c->RangeLow, c->RangeHigh);
-	LoadFloat(&c->GravityFactor, node, "GravityFactor");
-	LoadBool(&c->HitsWalls, node, "HitsWalls");
-	c->Bounces = true;
-	LoadBool(&c->Bounces, node, "Bounces");
-	LoadFloat(&c->BounceFriction, node, "BounceFriction");
-	c->WallBounces = true;
-	LoadBool(&c->WallBounces, node, "WallBounces");
-	LoadBool(&c->ZDarken, node, "ZDarken");
-	LoadBool(&c->DrawBelow, node, "DrawBelow");
-	LoadBool(&c->DrawAbove, node, "DrawAbove");
-}
-
-const ParticleClass *StrParticleClass(
-	const ParticleClasses *classes, const char *name)
-{
-	if (name == NULL || strlen(name) == 0)
-	{
-		return NULL;
-	}
-	CA_FOREACH(const ParticleClass, c, classes->CustomClasses)
-	if (strcmp(c->Name, name) == 0)
-	{
-		return c;
-	}
-	CA_FOREACH_END()
-	CA_FOREACH(const ParticleClass, c, classes->Classes)
-	if (strcmp(c->Name, name) == 0)
-	{
-		return c;
-	}
-	CA_FOREACH_END()
-	LOG(LM_MAIN, LL_ERROR, "Cannot find particle class %s", name);
-	return NULL;
-}
 
 void ParticlesInit(CArray *particles)
 {
@@ -482,6 +269,14 @@ int ParticleAdd(CArray *particles, const AddParticle add)
 	case PARTICLE_TEXT:
 		CSTRDUP(p->u.Text, add.Text);
 		break;
+	case PARTICLE_CHAR_SPRITE: {
+		const TActor *actor = ActorGetByUID(add.ActorUID);
+		if (actor)
+		{
+			p->u.Char = ActorGetCharacter(actor);
+		}
+	}
+	break;
 	default:
 		break;
 	}
@@ -525,9 +320,13 @@ void ParticleDestroy(CArray *particles, const int id)
 		return;
 	}
 	MapRemoveThing(&gMap, &p->thing);
-	if (p->Class->Type == PARTICLE_TEXT)
+	switch (p->Class->Type)
 	{
+	case PARTICLE_TEXT:
 		CFREE(p->u.Text);
+		break;
+	default:
+		break;
 	}
 	p->isInUse = false;
 }
@@ -579,6 +378,24 @@ static void DrawParticle(const struct vec2i pos, const ThingDrawFuncData *data)
 		opts.Mask = p->Class->u.Text.Mask;
 		FontStrOpt(
 			p->u.Text, svec2i(pos.x, pos.y - (int)(p->Z / Z_FACTOR)), opts);
+		break;
+	}
+	case PARTICLE_CHAR_SPRITE: {
+		if (p->u.Char == NULL)
+			break;
+		const int idx = (int)RadiansToDirection(p->Angle);
+		const NamedSprites *ns = PicManagerGetCharSprites(
+			&gPicManager, p->Class->u.CharSprite, &p->u.Char->Colors);
+		if (ns == NULL)
+		{
+			break;
+		}
+		const Pic *pic = CArrayGet(&ns->pics, idx);
+		const struct vec2i offset = svec2i(
+			pic->size.x / -2, pic->size.y / -2 - (int)(p->Z / Z_FACTOR));
+		PicRender(
+			pic, gGraphicsDevice.gameWindow.renderer, svec2i_add(pos, offset),
+			colorWhite, 0, svec2_one(), SDL_FLIP_NONE, Rect2iZero());
 		break;
 	}
 	default:

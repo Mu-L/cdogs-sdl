@@ -27,50 +27,54 @@
 */
 #pragma once
 
-#include "character.h"
-#include "particle_class.h"
+#include <json/json.h>
+
+#include "pic.h"
+#include "thing.h"
+
+typedef enum
+{
+	PARTICLE_PIC,
+	PARTICLE_TEXT,
+	PARTICLE_CHAR_SPRITE,
+} ParticleType;
+ParticleType StrParticleType(const char *s);
 
 typedef struct
 {
-	const ParticleClass *Class;
+	char *Name;
+	ParticleType Type;
 	union {
 		CPic Pic;
-		char *Text;
-		const Character *Char;
+		struct
+		{
+			char *Value;
+			color_t Mask;
+		} Text;
+		char *CharSprite;
 	} u;
-	int ActorUID;
-	struct vec2 Pos;
-	float Z;
-	double Angle;
-	float DZ;
-	double Spin;
-	int Count;
-	int Range;
-	Thing thing;
-	bool isAttached;
-	bool isInUse;
-} Particle;
-extern CArray gParticles; // of Particle
-
+	// -1 is infinite range
+	int RangeLow;
+	int RangeHigh;
+	float GravityFactor;
+	bool HitsWalls;
+	bool Bounces;
+	float BounceFriction;
+	bool WallBounces;
+	bool ZDarken; // darken as the particle falls to the ground
+	bool DrawBelow;
+	bool DrawAbove;
+} ParticleClass;
 typedef struct
 {
-	const ParticleClass *Class;
-	int ActorUID;
-	struct vec2 Pos;
-	float Z;
-	struct vec2 Vel;
-	double Angle;
-	float DZ;
-	double Spin;
-	struct vec2 DrawScale;
-	color_t Mask;
-	char Text[128];
-	bool IsAttached;
-} AddParticle;
+	CArray Classes;		  // of ParticleClass
+	CArray CustomClasses; // of ParticleClass
+} ParticleClasses;
+extern ParticleClasses gParticleClasses;
 
-void ParticlesInit(CArray *particles);
-void ParticlesTerminate(CArray *particles);
-void ParticlesUpdate(CArray *particles, const int ticks);
-
-int ParticleAdd(CArray *particles, const AddParticle add);
-void ParticleDestroy(CArray *particles, const int id);
+void ParticleClassesInit(ParticleClasses *classes, const char *filename);
+void ParticleClassesLoadJSON(CArray *classes, json_t *root);
+void ParticleClassesTerminate(ParticleClasses *classes);
+void ParticleClassesClear(CArray *classes);
+const ParticleClass *StrParticleClass(
+	const ParticleClasses *classes, const char *name);
