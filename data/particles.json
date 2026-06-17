@@ -472,9 +472,79 @@
       "BounceFriction": 0.4
     },
     {
+      "Name": "hat/capotain",
+      "Type": "CharSprite",
+      "CharSprite": "chars/hats/capotain",
+      "RangeLow": 10000,
+      "RangeHigh": 11000,
+      "GravityFactor": 1,
+      "HitsWalls": true,
+      "BounceFriction": 0.4
+    },
+    {
       "Name": "hat/combat_helmet",
       "Type": "CharSprite",
       "CharSprite": "chars/hats/combat_helmet",
+      "RangeLow": 10000,
+      "RangeHigh": 11000,
+      "GravityFactor": 1,
+      "HitsWalls": true,
+      "BounceFriction": 0.4
+    },
+    {
+      "Name": "hat/leprechaun",
+      "Type": "CharSprite",
+      "CharSprite": "chars/hats/leprechaun",
+      "RangeLow": 10000,
+      "RangeHigh": 11000,
+      "GravityFactor": 1,
+      "HitsWalls": true,
+      "BounceFriction": 0.4
+    },
+    {
+      "Name": "hat/party",
+      "Type": "CharSprite",
+      "CharSprite": "chars/hats/party",
+      "RangeLow": 10000,
+      "RangeHigh": 11000,
+      "GravityFactor": 1,
+      "HitsWalls": true,
+      "BounceFriction": 0.4
+    },
+    {
+      "Name": "hat/peak_cap",
+      "Type": "CharSprite",
+      "CharSprite": "chars/hats/peak_cap",
+      "RangeLow": 10000,
+      "RangeHigh": 11000,
+      "GravityFactor": 1,
+      "HitsWalls": true,
+      "BounceFriction": 0.4
+    },
+    {
+      "Name": "hat/santa",
+      "Type": "CharSprite",
+      "CharSprite": "chars/hats/santa",
+      "RangeLow": 10000,
+      "RangeHigh": 11000,
+      "GravityFactor": 1,
+      "HitsWalls": true,
+      "BounceFriction": 0.4
+    },
+    {
+      "Name": "hat/sombrero",
+      "Type": "CharSprite",
+      "CharSprite": "chars/hats/sombrero",
+      "RangeLow": 10000,
+      "RangeHigh": 11000,
+      "GravityFactor": 1,
+      "HitsWalls": true,
+      "BounceFriction": 0.4
+    },
+    {
+      "Name": "hat/witch",
+      "Type": "CharSprite",
+      "CharSprite": "chars/hats/witch",
       "RangeLow": 10000,
       "RangeHigh": 11000,
       "GravityFactor": 1,
